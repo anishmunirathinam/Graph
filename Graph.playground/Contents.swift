@@ -10,14 +10,13 @@ protocol Graph {
     associatedtype Element
     func createVertex(data: Element) -> Vertex<Element>
     func addDirectedEdge(from source: Vertex<Element>, to destination: Vertex<Element>, weight: Double?)
-    func addUndirectedEdgr(between source: Vertex<Element>, and destination: Vertex<Element>, weight: Double?)
+    func addUndirectedEdge(between source: Vertex<Element>, and destination: Vertex<Element>, weight: Double?)
     func add(_ edge: EdgeType, from source: Vertex<Element>, to destination: Vertex<Element>, weight: Double?)
     func edges(from source: Vertex<Element>) -> [Edge<Element>]
     func weight(from source: Vertex<Element>, to destination: Vertex<Element>) -> Double?
 }
 
 // Graph Implementation - Adjacency List: Each vertex stores the set of outgoing vertex
-
 class AdjacencyList<T: Hashable>: Graph {
     
     var adjacencies: [Vertex<T>: [Edge<T>]] = [:]
@@ -50,7 +49,7 @@ class AdjacencyList<T: Hashable>: Graph {
 }
 
 extension Graph {
-    func addUndirectedEdgr(between source: Vertex<Element>, and destination: Vertex<Element>, weight: Double?) {
+    func addUndirectedEdge(between source: Vertex<Element>, and destination: Vertex<Element>, weight: Double?) {
         addDirectedEdge(from: source, to: destination, weight: weight)
         addDirectedEdge(from: destination, to: source, weight: weight)
     }
@@ -60,7 +59,7 @@ extension Graph {
         case .directed:
             addDirectedEdge(from: source, to: destination, weight: weight)
         case .undirected:
-            addUndirectedEdgr(between: source, and: destination, weight: weight)
+            addUndirectedEdge(between: source, and: destination, weight: weight)
         }
     }
 }
@@ -107,5 +106,46 @@ print("Outgoing flights from singapore")
 for edge in graph.edges(from: singapore) {
     if let cost = graph.weight(from: edge.source, to: edge.destination) {
         print("from: \(edge.source.data) to: \(edge.destination.data), cost: $\(cost)")
+    }
+}
+
+
+// Adjacency Matrix
+
+class AdjacencyMatrix<T>: Graph {
+    typealias Element = T
+    var vertices: [Vertex<T>] = []
+    var weights: [[Double?]] = []
+    
+    init() {
+    }
+    
+    func createVertex(data: T) -> Vertex<T> {
+        let vertex = Vertex(index: vertices.count, data: data)
+        vertices.append(vertex)
+        for i in 0..<weights.count {
+            weights[i].append(nil)
+        }
+        let row = [Double?].init(repeating: nil, count: vertices.count)
+        weights.append(row)
+        return vertex
+    }
+    
+    func addDirectedEdge(from source: Vertex<T>, to destination: Vertex<T>, weight: Double?) {
+        weights[source.index][destination.index] = weight
+    }
+    
+    func edges(from source: Vertex<T>) -> [Edge<T>] {
+        var edges: [Edge<T>] = []
+        for column in 0..<weights.count {
+            if let weight = weights[source.index][column] {
+                edges.append(Edge(source: source, destination: vertices[column], weight: weight))
+            }
+        }
+        return edges
+    }
+    
+    func weight(from source: Vertex<T>, to destination: Vertex<T>) -> Double? {
+        weights[source.index][destination.index]
     }
 }
